@@ -58,7 +58,7 @@ npm install
 
 Quá trình này sẽ cài đặt tất cả các package cần thiết:
 - electron: Framework Electron
-- better-sqlite3: Database SQLite
+- nedb: Database nhúng (MongoDB Lite)
 - otplib: Thư viện tạo mã TOTP
 - electron-builder: Công cụ build ứng dụng
 

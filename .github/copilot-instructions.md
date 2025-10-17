@@ -12,8 +12,8 @@ Luồng dữ liệu chính: **UI → IPC → Main Process → Database/Crypto �
 ## Thành Phần Cốt Lõi & Mẫu Thiết Kế
 
 ### Lớp Database (`src/utils/database.js`)
-- Sử dụng **better-sqlite3** cho các thao tác SQLite đồng bộ
-- Schema: bảng `accounts` với trường `secret_key` được mã hóa
+- Sử dụng **NeDB** cho các thao tác database (document-based, giống MongoDB)
+- Schema: documents với các trường `_id`, `service_name`, `username`, `secret_key` (mã hóa), `createdAt`, `updatedAt`
 - Đường dẫn database: `app.getPath('userData')/accounts.db` (theo user)
 
 ### Lớp Bảo Mật (`src/utils/crypto.js`)
@@ -78,7 +78,7 @@ npm run build:win/mac/linux  # Build theo platform
 - **Comments/docs tiếng Việt** xuyên suốt codebase - điều này có chủ ý
 - Cấu hình build dùng **electron-builder** với NSIS cho Windows
 - DevTools tự động mở chỉ trong development mode
-- Schema database bao gồm timestamps `created_at`/`updated_at` với SQLite functions
+- Schema database dùng NeDB với timestamps `createdAt`/`updatedAt` tự động
 
 ## Tác Vụ Thường Gặp
 
@@ -90,6 +90,6 @@ Khi **cập nhật UI**: Kiểm tra tương thích cả light/dark theme trong `
 
 - Secret key validation: dùng regex `/^[A-Z2-7]+=*$/` cho Base32
 - Theme toggle: event listener duy nhất, state lưu localStorage
-- Database operations: luôn dùng prepared statements từ better-sqlite3
+- Database operations: NeDB dùng promises, các truy vấn không cần prepared statements
 - TOTP refresh: setInterval 1 giây, tính toán thời gian còn lại từ epoch
 - Error notifications: timeout 3 giây, class CSS `notification-error/success`

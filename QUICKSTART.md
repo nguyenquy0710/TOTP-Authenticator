@@ -200,7 +200,7 @@ npm start
 | Feature | Description |
 |---------|-------------|
 | 🔐 TOTP Generation | Automatic 6-digit code generation |
-| 💾 Local Storage | SQLite database |
+| 💾 Local Storage | NeDB database (MongoDB Lite) |
 | 🔒 Encryption | AES-256-CBC encryption |
 | 🌙 Dark Mode | Eye-friendly dark theme |
 | ⏱️ Auto-Refresh | Codes refresh every 30s |

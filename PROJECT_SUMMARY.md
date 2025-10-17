@@ -15,7 +15,7 @@ All requirements from the problem statement have been successfully implemented.
 ### 1. Technology Stack ✅
 
 - [x] **Electron** - Desktop application framework
-- [x] **SQLite** (better-sqlite3) - Local database storage
+- [x] **NeDB** - Local database storage (MongoDB Lite)
 - [x] **HTML/CSS/JavaScript** - User interface
 - [x] **Node.js** - Backend logic
 - [x] **crypto** - Data encryption
@@ -23,16 +23,16 @@ All requirements from the problem statement have been successfully implemented.
 ### 2. Core Features ✅
 
 #### Database ✅
-- [x] SQLite database implementation
-- [x] `accounts` table with all required columns:
-  - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT)
-  - `service_name` (TEXT)
-  - `username` (TEXT)
-  - `secret_key` (TEXT, encrypted)
-  - `created_at` (DATETIME)
-  - `updated_at` (DATETIME)
+- [x] NeDB database implementation (document-based)
+- [x] `accounts` collection with all required fields:
+  - `_id` (auto-generated unique ID)
+  - `service_name` (text)
+  - `username` (text)
+  - `secret_key` (text, encrypted)
+  - `createdAt` (timestamp, auto-generated)
+  - `updatedAt` (timestamp, auto-updated)
 - [x] Connection via preload script
-- [x] Prepared statements for security
+- [x] No SQL injection risk (document-based)
 
 #### CRUD Operations ✅
 - [x] Add new accounts
@@ -170,8 +170,8 @@ src/
 ### Dependencies Installed: 337 packages
 
 **Main Dependencies:**
-- electron ^27.0.0
-- better-sqlite3 ^9.0.0
+- electron ^38.3.0
+- nedb ^1.8.0
 - otplib ^12.0.1
 
 **Dev Dependencies:**
@@ -238,7 +238,7 @@ All 6 test groups passed
 
 ### Technical Excellence
 - 🔐 Enterprise-grade encryption
-- 💾 Efficient SQLite storage
+- 💾 Efficient NeDB storage
 - 🛡️ Multiple security layers
 - ⚡ Fast performance
 - 🔄 Auto-refresh TOTP codes
@@ -337,7 +337,7 @@ npm run build          # Build for all platforms
 Every single requirement from the problem statement has been implemented:
 
 ✅ Electron desktop app
-✅ SQLite database
+✅ NeDB database (MongoDB Lite)
 ✅ Encryption (AES-256-CBC)
 ✅ CRUD operations
 ✅ Dark mode UI

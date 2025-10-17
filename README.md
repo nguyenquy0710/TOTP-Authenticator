@@ -1,11 +1,11 @@
 # TOTP Authenticator
 
-Ứng dụng desktop TOTP Authenticator được xây dựng bằng Electron, SQLite, và Node.js với giao diện thân thiện và hỗ trợ chế độ tối (dark mode).
+Ứng dụng desktop TOTP Authenticator được xây dựng bằng Electron, NeDB, và Node.js với giao diện thân thiện và hỗ trợ chế độ tối (dark mode).
 
 ## ✨ Tính Năng
 
 - 🔐 Tạo mã TOTP (Time-based One-Time Password) tự động
-- 💾 Lưu trữ tài khoản an toàn với SQLite
+- 💾 Lưu trữ tài khoản an toàn với NeDB (MongoDB Lite)
 - 🔒 Mã hóa secret key trước khi lưu trữ
 - ➕ Thêm, sửa, xóa tài khoản dễ dàng
 - 📋 Sao chép mã TOTP nhanh chóng
@@ -99,7 +99,7 @@ TOTP-Authenticator/
 ├── src/
 │   ├── assets/          # Icon và tài nguyên
 │   ├── utils/           # Các module tiện ích
-│   │   ├── database.js  # Quản lý SQLite database
+│   │   ├── database.js  # Quản lý NeDB database
 │   │   └── crypto.js    # Mã hóa/giải mã dữ liệu
 │   ├── main.js          # Electron main process
 │   ├── preload.js       # Preload script (IPC bridge)
@@ -113,7 +113,7 @@ TOTP-Authenticator/
 ## 🔧 Công Nghệ Sử Dụng
 
 - **Electron**: Framework để xây dựng ứng dụng desktop đa nền tảng
-- **better-sqlite3**: SQLite database cho Node.js
+- **NeDB**: Nhúng database (MongoDB Lite) cho Node.js & Electron
 - **otplib**: Thư viện tạo mã TOTP
 - **crypto**: Module mã hóa của Node.js
 - **electron-builder**: Đóng gói ứng dụng
@@ -128,16 +128,16 @@ TOTP-Authenticator/
 
 ## 📝 Database Schema
 
-Bảng `accounts`:
-```sql
-CREATE TABLE accounts (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  service_name TEXT NOT NULL,
-  username TEXT NOT NULL,
-  secret_key TEXT NOT NULL,      -- Encrypted
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)
+NeDB sử dụng schema document-based (giống MongoDB):
+```javascript
+{
+  _id: "unique_id",              // Tự động tạo bởi NeDB
+  service_name: "Google",        // Tên dịch vụ
+  username: "user@gmail.com",    // Tên người dùng
+  secret_key: "encrypted_key",   // Secret key đã mã hóa
+  createdAt: Date,               // Tự động tạo
+  updatedAt: Date                // Tự động cập nhật
+}
 ```
 
 ## 🤝 Đóng Góp
