@@ -35,6 +35,8 @@ The TOTP Authenticator window will open automatically!
 
 2. Click **"➕ Thêm Tài Khoản"** (Add Account)
 
+> **Note**: The UI uses Vietnamese labels. "Thêm Tài Khoản" means "Add Account".
+
 #### 2. View Your TOTP Code
 
 - Your 6-digit TOTP code appears below the account
