@@ -25,6 +25,7 @@
     "electron-builder": "^24.6.4"
   },
   "dependencies": {
+    "nedb": "^1.8.0",
     "otplib": "^12.0.1",
     "sqlite3": "^5.1.7"
   },
