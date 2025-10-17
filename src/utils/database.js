@@ -1,14 +1,21 @@
-const Database = require('better-sqlite3');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
 class DatabaseManager {
   constructor(dbPath) {
-    this.db = new Database(dbPath);
-    this.initDatabase();
+    this.dbPath = dbPath;
+    this.db = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        console.error('Failed to connect to database:', err);
+      } else {
+        this.initDatabase();
+      }
+    });
   }
 
   initDatabase() {
-    // Create accounts table if it doesn't exist
-    const createTableSQL = `
+    return new Promise((resolve, reject) => {
+      const createTableSQL = `
       CREATE TABLE IF NOT EXISTS accounts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         service_name TEXT NOT NULL,
@@ -18,49 +25,84 @@ class DatabaseManager {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `;
-    
-    this.db.exec(createTableSQL);
+      this.db.run(createTableSQL, (err) => {
+        if (err) {
+          console.error('Failed to initialize database:', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   getAllAccounts() {
-    const stmt = this.db.prepare('SELECT * FROM accounts ORDER BY created_at DESC');
-    return stmt.all();
+    return new Promise((resolve, reject) => {
+      const query = 'SELECT * FROM accounts ORDER BY created_at DESC';
+      this.db.all(query, (err, rows) => {
+        if (err) return reject(err);
+        resolve(rows);
+      });
+    });
   }
 
   getAccountById(id) {
-    const stmt = this.db.prepare('SELECT * FROM accounts WHERE id = ?');
-    return stmt.get(id);
+    return new Promise((resolve, reject) => {
+      const query = 'SELECT * FROM accounts WHERE id = ?';
+      this.db.get(query, [id], (err, row) => {
+        if (err) return reject(err);
+        resolve(row);
+      });
+    });
   }
 
-  addAccount(accountData) {
-    const { service_name, username, secret_key } = accountData;
-    const stmt = this.db.prepare(`
-      INSERT INTO accounts (service_name, username, secret_key)
-      VALUES (?, ?, ?)
-    `);
-    return stmt.run(service_name, username, secret_key);
+  addAccount({ service_name, username, secret_key }) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        INSERT INTO accounts (service_name, username, secret_key)
+        VALUES (?, ?, ?)
+      `;
+      this.db.run(query, [service_name, username, secret_key], function (err) {
+        if (err) return reject(err);
+        resolve({ id: this.lastID });
+      });
+    });
   }
 
-  updateAccount(id, accountData) {
-    const { service_name, username, secret_key } = accountData;
-    const stmt = this.db.prepare(`
-      UPDATE accounts 
-      SET service_name = ?, 
-          username = ?, 
-          secret_key = ?,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `);
-    return stmt.run(service_name, username, secret_key, id);
+  updateAccount(id, { service_name, username, secret_key }) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        UPDATE accounts 
+        SET service_name = ?, 
+            username = ?, 
+            secret_key = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `;
+      this.db.run(query, [service_name, username, secret_key, id], function (err) {
+        if (err) return reject(err);
+        resolve({ changes: this.changes });
+      });
+    });
   }
 
   deleteAccount(id) {
-    const stmt = this.db.prepare('DELETE FROM accounts WHERE id = ?');
-    return stmt.run(id);
+    return new Promise((resolve, reject) => {
+      const query = 'DELETE FROM accounts WHERE id = ?';
+      this.db.run(query, [id], function (err) {
+        if (err) return reject(err);
+        resolve({ changes: this.changes });
+      });
+    });
   }
 
   close() {
-    this.db.close();
+    return new Promise((resolve, reject) => {
+      this.db.close((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
   }
 }
 

@@ -38,7 +38,7 @@ app.on('ready', () => {
   const dbPath = path.join(app.getPath('userData'), 'accounts.db');
   db = new Database(dbPath);
   crypto = new Crypto();
-  
+
   createWindow();
 });
 
@@ -59,7 +59,8 @@ app.on('activate', () => {
 // Get all accounts
 ipcMain.handle('get-accounts', async () => {
   try {
-    const accounts = db.getAllAccounts();
+    const accounts = await db.getAllAccounts();
+    console.log("🚀 QuyNH: accounts", accounts)
     // Decrypt secret keys for display
     return accounts.map(account => ({
       ...account,
@@ -75,16 +76,16 @@ ipcMain.handle('get-accounts', async () => {
 ipcMain.handle('add-account', async (event, accountData) => {
   try {
     const { service_name, username, secret_key } = accountData;
-    
+
     // Encrypt secret key before storing
     const encryptedKey = crypto.encrypt(secret_key);
-    
-    const result = db.addAccount({
+
+    const result = await db.addAccount({
       service_name,
       username,
       secret_key: encryptedKey
     });
-    
+
     return { success: true, id: result.lastInsertRowid };
   } catch (error) {
     console.error('Error adding account:', error);
@@ -96,16 +97,16 @@ ipcMain.handle('add-account', async (event, accountData) => {
 ipcMain.handle('update-account', async (event, accountData) => {
   try {
     const { id, service_name, username, secret_key } = accountData;
-    
+
     // Encrypt secret key before storing
     const encryptedKey = crypto.encrypt(secret_key);
-    
-    db.updateAccount(id, {
+
+    await db.updateAccount(id, {
       service_name,
       username,
       secret_key: encryptedKey
     });
-    
+
     return { success: true };
   } catch (error) {
     console.error('Error updating account:', error);
@@ -116,7 +117,7 @@ ipcMain.handle('update-account', async (event, accountData) => {
 // Delete account
 ipcMain.handle('delete-account', async (event, id) => {
   try {
-    db.deleteAccount(id);
+    await db.deleteAccount(id);
     return { success: true };
   } catch (error) {
     console.error('Error deleting account:', error);
