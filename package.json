@@ -1,0 +1,61 @@
+{
+  "name": "totp-authenticator",
+  "version": "1.0.0",
+  "description": "TOTP Authenticator Desktop Application with SQLite",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "keywords": [
+    "totp",
+    "authenticator",
+    "electron",
+    "sqlite",
+    "2fa"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.0.0",
+    "otplib": "^12.0.1"
+  },
+  "build": {
+    "appId": "com.totp.authenticator",
+    "productName": "TOTP Authenticator",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "src/assets/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "src/assets/icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "src/assets/icon.png"
+    }
+  }
+}
