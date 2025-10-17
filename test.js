@@ -32,9 +32,9 @@ try {
   // Test 1: Add accounts
   console.log('Test 1: Adding accounts...');
   const testAccounts = [
-    { service_name: 'Google', username: 'user1@gmail.com', secret_key: 'JBSWY3DPEHPK3PXP' },
-    { service_name: 'GitHub', username: 'developer', secret_key: 'KBSWY3DPEHPK3PXQ' },
-    { service_name: 'Facebook', username: 'user@fb.com', secret_key: 'LBSWY3DPEHPK3PXR' }
+    { service_name: 'Google', username: 'user1@gmail.com', secret_key: '*****' },
+    { service_name: 'GitHub', username: 'developer', secret_key: '*****' },
+    { service_name: 'Facebook', username: 'user@fb.com', secret_key: '*****' }
   ];
 
   const addedIds = [];
