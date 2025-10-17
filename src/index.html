@@ -1,84 +1,85 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TOTP Authenticator</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>🔐 TOTP Authenticator</h1>
-      <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Mode">
-        <span class="icon">🌙</span>
-      </button>
-    </header>
 
-    <main>
-      <!-- Add/Edit Account Form -->
-      <section class="form-section">
-        <h2 id="form-title">Thêm Tài Khoản Mới</h2>
-        <form id="account-form">
-          <input type="hidden" id="account-id" value="">
-          
-          <div class="form-group">
-            <label for="service-name">Tên Dịch Vụ *</label>
-            <input 
-              type="text" 
-              id="service-name" 
-              placeholder="VD: Google, Facebook, GitHub..." 
-              required
-            >
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TOTP Authenticator</title>
+
+    <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    <meta name="description" content="Ứng dụng xác thực TOTP mã nguồn mở cho máy tính để bàn.">
+    <meta name="keywords" content="TOTP, Authenticator, Xác thực, Mã nguồn mở, Máy tính để bàn">
+    <meta name="author" content="Nguyễn Quý">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Vietnamese">
+    <meta name="revisit-after" content="7 days">
+    <meta name="theme-color" content="#317EFB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="stylesheet" href="assets/scss/styles.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1>🔐 TOTP Authenticator</h1>
+        <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Mode">
+          <span class="icon">🌙</span>
+        </button>
+      </header>
+
+      <main>
+        <!-- Add/Edit Account Form -->
+        <section class="form-section">
+          <h2 id="form-title">Thêm Tài Khoản Mới</h2>
+          <form id="account-form">
+            <input type="hidden" id="account-id" value="">
+
+            <div class="form-group">
+              <label for="service-name">Tên Dịch Vụ *</label>
+              <input type="text" id="service-name" placeholder="VD: Google, Facebook, GitHub..." required>
+            </div>
+
+            <div class="form-group">
+              <label for="username">Tên Người Dùng *</label>
+              <input type="text" id="username" placeholder="VD: user@example.com" required>
+            </div>
+
+            <div class="form-group">
+              <label for="secret-key">Secret Key (Khóa Bí Mật) *</label>
+              <input type="text" id="secret-key" placeholder="VD: JBSWY3DPEHPK3PXP" required pattern="[A-Z2-7]+"
+                title="Secret key phải là ký tự A-Z và 2-7">
+              <small>Secret key thường có định dạng Base32 (chỉ chứa A-Z và 2-7)</small>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="submit-btn">
+                <span class="icon">➕</span> Thêm Tài Khoản
+              </button>
+              <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">
+                <span class="icon">❌</span> Hủy
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Accounts List -->
+        <section class="accounts-section">
+          <h2>Danh Sách Tài Khoản</h2>
+          <div id="accounts-container">
+            <div class="loading">Đang tải...</div>
           </div>
+        </section>
+      </main>
+    </div>
 
-          <div class="form-group">
-            <label for="username">Tên Người Dùng *</label>
-            <input 
-              type="text" 
-              id="username" 
-              placeholder="VD: user@example.com" 
-              required
-            >
-          </div>
+    <!-- Notification Toast -->
+    <div id="notification" class="notification"></div>
 
-          <div class="form-group">
-            <label for="secret-key">Secret Key (Khóa Bí Mật) *</label>
-            <input 
-              type="text" 
-              id="secret-key" 
-              placeholder="VD: JBSWY3DPEHPK3PXP" 
-              required
-              pattern="[A-Z2-7]+"
-              title="Secret key phải là ký tự A-Z và 2-7"
-            >
-            <small>Secret key thường có định dạng Base32 (chỉ chứa A-Z và 2-7)</small>
-          </div>
+    <script src="renderer.js"></script>
+  </body>
 
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary" id="submit-btn">
-              <span class="icon">➕</span> Thêm Tài Khoản
-            </button>
-            <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">
-              <span class="icon">❌</span> Hủy
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <!-- Accounts List -->
-      <section class="accounts-section">
-        <h2>Danh Sách Tài Khoản</h2>
-        <div id="accounts-container">
-          <div class="loading">Đang tải...</div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- Notification Toast -->
-  <div id="notification" class="notification"></div>
-
-  <script src="renderer.js"></script>
-</body>
 </html>

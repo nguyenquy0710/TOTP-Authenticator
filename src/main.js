@@ -7,6 +7,15 @@ let mainWindow;
 let db;
 let crypto;
 
+console.log('User Data Path: ', app.getPath('userData'));
+console.log('App Data Path: ', app.getPath('appData'));
+console.log('Home Path: ', app.getPath('home'));
+console.log('Temp Path: ', app.getPath('temp'));
+
+const customPath = path.join(app.getPath('home'), 'totp-authenticator');
+console.log("QuyNH: customPath", customPath)
+// app.setPath('userData', customPath);
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -36,6 +45,7 @@ function createWindow() {
 // Initialize database and crypto
 app.on('ready', () => {
   const dbPath = path.join(app.getPath('userData'), 'accounts.db');
+  console.log('Database path:', dbPath);
   db = new Database(dbPath);
   crypto = new Crypto();
 
@@ -60,7 +70,6 @@ app.on('activate', () => {
 ipcMain.handle('get-accounts', async () => {
   try {
     const accounts = await db.getAllAccounts();
-    console.log("🚀 QuyNH: accounts", accounts)
     // Decrypt secret keys for display
     return accounts.map(account => ({
       ...account,
