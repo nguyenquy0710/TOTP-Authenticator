@@ -1,0 +1,300 @@
+# Changelog
+
+All notable changes to TOTP Authenticator will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2025-10-17
+
+### Added
+
+#### Core Features
+- ✨ Desktop application built with Electron
+- 🔐 TOTP (Time-based One-Time Password) code generation
+- 💾 SQLite database for local storage
+- 🔒 AES-256-CBC encryption for secret keys
+- ➕ Add new accounts with service name, username, and secret key
+- ✏️ Edit existing accounts
+- 🗑️ Delete accounts
+- 📋 Copy TOTP codes to clipboard
+- ⏱️ Real-time TOTP countdown timer
+- 🔄 Auto-refresh TOTP codes every 30 seconds
+
+#### User Interface
+- 🎨 Clean and modern interface
+- 🌙 Dark mode support with theme toggle
+- 📱 Responsive design
+- 🎯 Intuitive form validation
+- 💬 Toast notifications for user actions
+- ⚡ Smooth animations and transitions
+- 🎭 Visual progress bars for TOTP timers
+
+#### Security
+- 🔐 Context isolation enabled
+- 🛡️ IPC communication through secure preload script
+- 🔑 Machine-specific encryption keys
+- 📁 Secure database storage in user data directory
+- ✅ Input validation and sanitization
+- 🚫 XSS prevention with HTML escaping
+- 🔒 SQL injection prevention with prepared statements
+
+#### Database
+- 💾 SQLite database with accounts table
+- 📊 Schema includes: id, service_name, username, secret_key (encrypted), created_at, updated_at
+- 🔍 CRUD operations: Create, Read, Update, Delete
+- ⚡ Synchronous operations with better-sqlite3
+
+#### Encryption
+- 🔐 AES-256-CBC encryption algorithm
+- 🔑 SHA-256 for key derivation
+- 🎲 Random IV (Initialization Vector) per encryption
+- 🖥️ Machine-specific encryption (hostname + platform + arch)
+
+#### Testing
+- ✅ Comprehensive test suite
+- 🧪 Tests for database operations
+- 🔐 Tests for encryption/decryption
+- 🔢 Tests for TOTP generation
+- 📝 Automated test script
+
+#### Documentation
+- 📖 Comprehensive README.md
+- 🛠️ Detailed INSTALL.md (installation guide)
+- 📚 Complete USAGE.md (user guide)
+- 🔒 Extensive SECURITY.md (security documentation)
+- 🏗️ Detailed ARCHITECTURE.md (technical architecture)
+- 📋 CHANGELOG.md (this file)
+
+#### Build & Deployment
+- 📦 electron-builder configuration
+- 🪟 Windows build support (.exe)
+- 🍎 macOS build support (.dmg)
+- 🐧 Linux build support (.AppImage)
+- ⚙️ NPM scripts for building and running
+
+#### Dependencies
+- electron ^27.0.0 - Desktop application framework
+- better-sqlite3 ^9.0.0 - SQLite database
+- otplib ^12.0.1 - TOTP generation library
+- electron-builder ^24.6.4 - Application packaging
+
+### Security Features
+
+- Machine-specific database encryption
+- Secret keys encrypted before storage
+- No plaintext secret keys in memory
+- Secure IPC communication
+- Context isolation in Electron
+- No Node.js integration in renderer
+- Prepared SQL statements
+- HTML output escaping
+- Input validation
+
+### Technical Details
+
+#### File Structure
+```
+src/
+├── main.js          - Electron main process
+├── preload.js       - IPC security bridge
+├── renderer.js      - Frontend logic
+├── index.html       - User interface
+├── styles.css       - Styling with dark mode
+└── utils/
+    ├── database.js  - SQLite operations
+    └── crypto.js    - Encryption/Decryption
+```
+
+#### IPC Handlers
+- `get-accounts` - Retrieve all accounts
+- `add-account` - Add new account
+- `update-account` - Update existing account
+- `delete-account` - Delete account
+- `generate-totp` - Generate TOTP code
+
+#### Database Schema
+```sql
+CREATE TABLE accounts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  service_name TEXT NOT NULL,
+  username TEXT NOT NULL,
+  secret_key TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+### Performance
+
+- ⚡ Fast SQLite operations
+- 🎯 Efficient TOTP generation
+- 💨 Smooth UI animations
+- 🔄 Minimal re-renders
+- 💾 Low memory footprint
+
+### Known Limitations
+
+- 🖥️ Database cannot be transferred between machines (machine-specific encryption)
+- 📱 No mobile app version
+- ☁️ No cloud sync (by design for security)
+- 📸 No QR code scanning (manual entry only)
+- 🔄 No import from other authenticators
+- 🌐 Offline only (no network features)
+
+### Platform Support
+
+#### Windows
+- Windows 10/11 (64-bit)
+- .exe installer with NSIS
+
+#### macOS
+- macOS 10.13 or higher
+- .dmg disk image
+
+#### Linux
+- Ubuntu 18.04+
+- Fedora 28+
+- Debian 9+
+- .AppImage format
+
+### System Requirements
+
+- Node.js 16.x or higher
+- 200 MB disk space
+- 512 MB RAM minimum
+- Display: 800x600 minimum
+
+### Installation
+
+```bash
+# Clone repository
+git clone https://github.com/nguyenquy0710/TOTP-Authenticator.git
+cd TOTP-Authenticator
+
+# Install dependencies
+npm install
+
+# Run application
+npm start
+
+# Build application
+npm run build:win   # Windows
+npm run build:mac   # macOS
+npm run build:linux # Linux
+```
+
+### Usage
+
+1. Launch TOTP Authenticator
+2. Fill in the form:
+   - Service Name (e.g., Google, GitHub)
+   - Username (e.g., user@example.com)
+   - Secret Key (Base32 format: A-Z, 2-7)
+3. Click "Add Account"
+4. TOTP code will be generated automatically
+5. Click "Copy" to copy code to clipboard
+6. Use code for two-factor authentication
+
+### Development
+
+```bash
+# Run in development mode
+npm start
+
+# Run tests
+npm test
+
+# Build for production
+npm run build
+```
+
+### Testing
+
+```bash
+# Run test suite
+npm test
+
+# Tests include:
+# - Database CRUD operations
+# - Encryption/Decryption
+# - TOTP generation
+# - Data integrity validation
+```
+
+## [Unreleased]
+
+### Planned Features
+- Import from Google Authenticator
+- Export accounts (encrypted backup)
+- QR code scanner
+- Search/Filter accounts
+- Categories/Tags for accounts
+- Master password option
+- Biometric authentication
+- Auto-lock feature
+- System tray integration
+- Multi-language support
+
+### Planned Improvements
+- Performance optimizations
+- Better error handling
+- Enhanced UI/UX
+- Accessibility improvements
+- More comprehensive tests
+- CI/CD pipeline
+
+## Version History
+
+- **1.0.0** (2025-10-17) - Initial release
+
+## Semantic Versioning
+
+This project follows [Semantic Versioning](https://semver.org/):
+- **MAJOR** version for incompatible API changes
+- **MINOR** version for new functionality (backwards compatible)
+- **PATCH** version for bug fixes (backwards compatible)
+
+## Contributing
+
+Contributions are welcome! Please read the contributing guidelines before submitting pull requests.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Update documentation
+6. Submit a pull request
+
+### Reporting Issues
+
+Report bugs and feature requests on [GitHub Issues](https://github.com/nguyenquy0710/TOTP-Authenticator/issues).
+
+## License
+
+MIT License - See [LICENSE](LICENSE) file for details.
+
+## Support
+
+- 📖 Documentation: See README.md, INSTALL.md, USAGE.md
+- 🔒 Security: See SECURITY.md
+- 🏗️ Architecture: See ARCHITECTURE.md
+- 🐛 Issues: [GitHub Issues](https://github.com/nguyenquy0710/TOTP-Authenticator/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/nguyenquy0710/TOTP-Authenticator/discussions)
+
+## Authors
+
+- Initial release by development team
+
+## Acknowledgments
+
+- Electron team for the amazing framework
+- better-sqlite3 contributors
+- otplib maintainers
+- All open-source contributors
+
+---
+
+For more details, see [README.md](README.md)
