@@ -43,10 +43,11 @@ function createWindow() {
 }
 
 // Initialize database and crypto
-app.on('ready', () => {
+app.on('ready', async () => {
   const dbPath = path.join(app.getPath('userData'), 'accounts.db');
   console.log('Database path:', dbPath);
   db = new Database(dbPath);
+  await db.initDatabase();
   crypto = new Crypto();
 
   createWindow();

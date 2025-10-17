@@ -1,7 +1,7 @@
 {
   "name": "totp-authenticator",
   "version": "1.0.0",
-  "description": "TOTP Authenticator Desktop Application with SQLite",
+  "description": "TOTP Authenticator Desktop Application with NeDB",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -15,7 +15,7 @@
     "totp",
     "authenticator",
     "electron",
-    "sqlite",
+    "nedb",
     "2fa"
   ],
   "author": "",
@@ -26,8 +26,7 @@
   },
   "dependencies": {
     "nedb": "^1.8.0",
-    "otplib": "^12.0.1",
-    "sqlite3": "^5.1.7"
+    "otplib": "^12.0.1"
   },
   "build": {
     "appId": "com.totp.authenticator",

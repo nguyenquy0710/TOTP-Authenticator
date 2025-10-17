@@ -1,107 +1,105 @@
-const sqlite3 = require('sqlite3').verbose();
+const Datastore = require('nedb');
 const path = require('path');
 
 class DatabaseManager {
   constructor(dbPath) {
     this.dbPath = dbPath;
-    this.db = new sqlite3.Database(dbPath, (err) => {
-      if (err) {
-        console.error('Failed to connect to database:', err);
-      } else {
-        this.initDatabase();
-      }
+    this.db = new Datastore({
+      filename: dbPath,
+      autoload: true,
+      timestampData: true
     });
   }
 
   initDatabase() {
     return new Promise((resolve, reject) => {
-      const createTableSQL = `
-      CREATE TABLE IF NOT EXISTS accounts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        service_name TEXT NOT NULL,
-        username TEXT NOT NULL,
-        secret_key TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-      this.db.run(createTableSQL, (err) => {
-        if (err) {
-          console.error('Failed to initialize database:', err);
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
+      // NeDB doesn't require schema creation, just resolve immediately
+      resolve();
     });
   }
 
   getAllAccounts() {
     return new Promise((resolve, reject) => {
-      const query = 'SELECT * FROM accounts ORDER BY created_at DESC';
-      this.db.all(query, (err, rows) => {
+      this.db.find({}).sort({ createdAt: -1 }).exec((err, docs) => {
         if (err) return reject(err);
-        resolve(rows);
+        // Map NeDB documents to match SQLite format (using _id as id)
+        const accounts = docs.map(doc => ({
+          id: doc._id,
+          service_name: doc.service_name,
+          username: doc.username,
+          secret_key: doc.secret_key,
+          created_at: doc.createdAt,
+          updated_at: doc.updatedAt
+        }));
+        resolve(accounts);
       });
     });
   }
 
   getAccountById(id) {
     return new Promise((resolve, reject) => {
-      const query = 'SELECT * FROM accounts WHERE id = ?';
-      this.db.get(query, [id], (err, row) => {
+      this.db.findOne({ _id: id }, (err, doc) => {
         if (err) return reject(err);
-        resolve(row);
+        if (!doc) {
+          resolve(null);
+        } else {
+          // Map NeDB document to match SQLite format
+          resolve({
+            id: doc._id,
+            service_name: doc.service_name,
+            username: doc.username,
+            secret_key: doc.secret_key,
+            created_at: doc.createdAt,
+            updated_at: doc.updatedAt
+          });
+        }
       });
     });
   }
 
   addAccount({ service_name, username, secret_key }) {
     return new Promise((resolve, reject) => {
-      const query = `
-        INSERT INTO accounts (service_name, username, secret_key)
-        VALUES (?, ?, ?)
-      `;
-      this.db.run(query, [service_name, username, secret_key], function (err) {
+      const newAccount = {
+        service_name,
+        username,
+        secret_key
+      };
+      
+      this.db.insert(newAccount, (err, doc) => {
         if (err) return reject(err);
-        resolve({ id: this.lastID });
+        resolve({ id: doc._id, lastInsertRowid: doc._id });
       });
     });
   }
 
   updateAccount(id, { service_name, username, secret_key }) {
     return new Promise((resolve, reject) => {
-      const query = `
-        UPDATE accounts 
-        SET service_name = ?, 
-            username = ?, 
-            secret_key = ?,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `;
-      this.db.run(query, [service_name, username, secret_key, id], function (err) {
+      const updateData = {
+        service_name,
+        username,
+        secret_key
+      };
+      
+      this.db.update({ _id: id }, { $set: updateData }, {}, (err, numReplaced) => {
         if (err) return reject(err);
-        resolve({ changes: this.changes });
+        resolve({ changes: numReplaced });
       });
     });
   }
 
   deleteAccount(id) {
     return new Promise((resolve, reject) => {
-      const query = 'DELETE FROM accounts WHERE id = ?';
-      this.db.run(query, [id], function (err) {
+      this.db.remove({ _id: id }, {}, (err, numRemoved) => {
         if (err) return reject(err);
-        resolve({ changes: this.changes });
+        resolve({ changes: numRemoved });
       });
     });
   }
 
   close() {
-    return new Promise((resolve, reject) => {
-      this.db.close((err) => {
-        if (err) return reject(err);
-        resolve();
-      });
+    return new Promise((resolve) => {
+      // NeDB doesn't need explicit close, but we keep the method for compatibility
+      resolve();
     });
   }
 }
