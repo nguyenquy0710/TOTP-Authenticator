@@ -1,0 +1,380 @@
+# Tài Liệu Bảo Mật - TOTP Authenticator
+
+## Tổng Quan Bảo Mật
+
+TOTP Authenticator được xây dựng với các biện pháp bảo mật nghiêm ngặt để bảo vệ dữ liệu nhạy cảm của người dùng.
+
+## Kiến Trúc Bảo Mật
+
+### 1. Context Isolation
+
+```javascript
+webPreferences: {
+  nodeIntegration: false,
+  contextIsolation: true,
+  preload: path.join(__dirname, 'preload.js')
+}
+```
+
+- **nodeIntegration: false**: Ngăn renderer process truy cập trực tiếp Node.js APIs
+- **contextIsolation: true**: Tách biệt context giữa renderer và preload script
+- **preload script**: Cung cấp API an toàn thông qua contextBridge
+
+### 2. IPC Communication
+
+**Preload Script:**
+```javascript
+contextBridge.exposeInMainWorld('api', {
+  getAccounts: () => ipcRenderer.invoke('get-accounts'),
+  addAccount: (data) => ipcRenderer.invoke('add-account', data),
+  // ... các API khác
+});
+```
+
+**Lợi ích:**
+- Chỉ expose các API cần thiết
+- Không cho phép renderer chạy code tùy ý
+- Kiểm soát hoàn toàn dữ liệu truyền tải
+
+### 3. Mã Hóa Dữ Liệu
+
+#### Thuật Toán Mã Hóa
+
+- **Thuật toán**: AES-256-CBC
+- **Key size**: 256 bits
+- **IV (Initialization Vector)**: Random 16 bytes cho mỗi encryption
+- **Key derivation**: SHA-256 hash của machine-specific data
+
+#### Quy Trình Mã Hóa
+
+```javascript
+encrypt(text) {
+  const iv = crypto.randomBytes(16);  // Random IV
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  const encrypted = cipher.update(text, 'utf8', 'hex') + cipher.final('hex');
+  return iv.toString('hex') + ':' + encrypted;  // IV:encrypted
+}
+```
+
+#### Quy Trình Giải Mã
+
+```javascript
+decrypt(encryptedData) {
+  const [ivHex, encrypted] = encryptedData.split(':');
+  const iv = Buffer.from(ivHex, 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  return decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8');
+}
+```
+
+#### Machine-Specific Key
+
+```javascript
+const machineId = os.hostname() + os.platform() + os.arch();
+const key = crypto.createHash('sha256').update(machineId).digest();
+```
+
+**Đặc điểm:**
+- Key phụ thuộc vào hostname, platform, và architecture
+- Mỗi máy tính có key riêng
+- Database không thể giải mã trên máy khác
+
+### 4. Database Security
+
+#### SQLite Database
+
+- **Vị trí**: User data directory (system-protected)
+- **Quyền truy cập**: Chỉ user hiện tại
+- **Encryption**: Secret keys được mã hóa trước khi lưu
+
+#### Schema
+
+```sql
+CREATE TABLE accounts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  service_name TEXT NOT NULL,
+  username TEXT NOT NULL,
+  secret_key TEXT NOT NULL,      -- Encrypted with AES-256-CBC
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+**Dữ liệu không được mã hóa:**
+- id, service_name, username, timestamps
+
+**Dữ liệu được mã hóa:**
+- secret_key (TOTP secret)
+
+#### Database Location
+
+**Windows:**
+```
+C:\Users\{Username}\AppData\Roaming\totp-authenticator\accounts.db
+```
+
+**macOS:**
+```
+~/Library/Application Support/totp-authenticator/accounts.db
+```
+
+**Linux:**
+```
+~/.config/totp-authenticator/accounts.db
+```
+
+**Bảo vệ:**
+- Thư mục AppData/Library/config được OS bảo vệ
+- Chỉ user hiện tại có quyền đọc/ghi
+
+## Các Biện Pháp Bảo Mật Bổ Sung
+
+### 1. Input Validation
+
+**Secret Key Validation:**
+```javascript
+if (!/^[A-Z2-7]+$/.test(secretKey)) {
+  throw new Error('Invalid secret key format');
+}
+```
+
+**SQL Injection Prevention:**
+- Sử dụng prepared statements
+- Không concatenate user input vào query
+
+```javascript
+const stmt = db.prepare('INSERT INTO accounts (service_name, username, secret_key) VALUES (?, ?, ?)');
+stmt.run(service_name, username, secret_key);
+```
+
+### 2. XSS Prevention
+
+**Output Encoding:**
+```javascript
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+```
+
+**Sử dụng:**
+```javascript
+element.innerHTML = `<h3>${escapeHtml(account.service_name)}</h3>`;
+```
+
+### 3. Memory Security
+
+**Sensitive Data Handling:**
+- Secret keys chỉ được giải mã khi cần
+- Không log sensitive data
+- Clear sensitive variables sau khi sử dụng
+
+### 4. Error Handling
+
+**Không Expose Stack Traces:**
+```javascript
+try {
+  // operations
+} catch (error) {
+  console.error('Operation failed');  // Generic message
+  // Don't expose: error.stack, error.message to user
+}
+```
+
+## Các Mối Đe Dọa Và Phòng Chống
+
+### 1. Unauthorized Access
+
+**Mối đe dọa:**
+- Người khác truy cập máy tính của bạn
+- Malware đọc database
+
+**Phòng chống:**
+- Luôn khóa máy tính khi rời khỏi
+- Sử dụng password mạnh cho OS
+- Cài đặt antivirus
+
+### 2. Database Theft
+
+**Mối đe dọa:**
+- Database file bị copy
+
+**Phòng chống:**
+- Database được mã hóa theo máy
+- Không thể giải mã trên máy khác
+- Machine-specific encryption key
+
+### 3. Man-in-the-Middle
+
+**Mối đe dọa:**
+- Không có vì app hoạt động offline
+
+**Phòng chống:**
+- Không cần - app không giao tiếp với server
+
+### 4. Memory Dump
+
+**Mối đe dọa:**
+- Memory dump có thể chứa secret keys
+
+**Phòng chống:**
+- Keys chỉ tồn tại trong memory khi cần
+- Application security phụ thuộc vào OS security
+
+### 5. Physical Access
+
+**Mối đe dọa:**
+- Người có quyền truy cập vật lý vào máy
+
+**Phòng chống:**
+- Khóa máy tính
+- Full disk encryption (BitLocker, FileVault)
+- Strong OS password
+
+## Best Practices Cho Người Dùng
+
+### 1. Bảo Vệ Máy Tính
+
+✅ **Nên làm:**
+- Sử dụng password mạnh cho OS
+- Bật full disk encryption
+- Khóa màn hình khi rời khỏi
+- Cập nhật OS thường xuyên
+- Cài đặt antivirus
+
+❌ **Không nên:**
+- Để máy không khóa
+- Chia sẻ máy với người không tin tưởng
+- Vô hiệu hóa security features
+
+### 2. Quản Lý Secret Keys
+
+✅ **Nên làm:**
+- Giữ secret keys gốc an toàn
+- Backup database thường xuyên
+- Lưu backup ở nơi an toàn
+
+❌ **Không nên:**
+- Chia sẻ secret keys
+- Gửi secret keys qua email
+- Screenshot secret keys
+- Post secret keys online
+
+### 3. Backup và Restore
+
+✅ **Nên làm:**
+- Backup trước khi cài đặt lại OS
+- Test restore process
+- Mã hóa file backup
+
+❌ **Không nên:**
+- Lưu backup trên cloud không mã hóa
+- Chia sẻ backup file
+- Quên backup
+
+### 4. Application Updates
+
+✅ **Nên làm:**
+- Cập nhật app khi có version mới
+- Đọc changelog
+- Backup trước khi update
+
+❌ **Không nên:**
+- Sử dụng version cũ lỗi thời
+- Download từ nguồn không chính thức
+
+## Giới Hạn Bảo Mật
+
+### 1. Machine-Specific Encryption
+
+**Ưu điểm:**
+- Database không thể dùng trên máy khác
+- Bảo vệ khỏi theft
+
+**Nhược điểm:**
+- Không thể di chuyển database giữa các máy
+- Mất data nếu thay đổi hardware
+
+**Giải pháp:**
+- Giữ secret keys gốc để thiết lập lại
+
+### 2. OS-Level Security
+
+**Phụ thuộc:**
+- Application security phụ thuộc vào OS security
+- Nếu OS bị compromise, app cũng bị ảnh hưởng
+
+**Giải pháp:**
+- Giữ OS updated
+- Sử dụng security features của OS
+
+### 3. Memory Security
+
+**Giới hạn:**
+- Secret keys tồn tại trong memory khi sử dụng
+- Memory dumps có thể chứa sensitive data
+
+**Giải pháp:**
+- Application security best practices
+- Minimize time keys stay in memory
+
+## Incident Response
+
+### Nếu Máy Tính Bị Mất/Đánh Cắp
+
+1. **Ngay lập tức:**
+   - Thay đổi password tất cả các dịch vụ
+   - Vô hiệu hóa 2FA cũ
+   - Thiết lập 2FA mới
+
+2. **Sau đó:**
+   - Report theft với authorities
+   - Wipe device remotely nếu có thể
+
+### Nếu Nghi Ngờ Compromise
+
+1. **Kiểm tra:**
+   - Unusual logins vào các dịch vụ
+   - Unauthorized changes
+
+2. **Hành động:**
+   - Reset 2FA cho tất cả dịch vụ
+   - Scan malware
+   - Reinstall OS nếu cần
+
+## Compliance
+
+### Standards
+
+- **TOTP**: RFC 6238 compliant
+- **Encryption**: NIST approved algorithms
+- **Key management**: Industry best practices
+
+### Privacy
+
+- **Không thu thập data**
+- **Không gửi data đến server**
+- **Hoàn toàn offline**
+- **No telemetry**
+
+## Reporting Security Issues
+
+Nếu phát hiện lỗ hổng bảo mật:
+1. **Không** công khai lỗ hổng
+2. Email đến: [security contact email]
+3. Cung cấp chi tiết về lỗ hổng
+4. Đợi response trước khi disclose
+
+## Changelog
+
+### Version 1.0.0
+- Initial release
+- AES-256-CBC encryption
+- Machine-specific key derivation
+- Context isolation
+- IPC security
+
+## Kết Luận
+
+TOTP Authenticator được xây dựng với security-first approach. Tuy nhiên, security là trách nhiệm chung giữa application và người dùng. Hãy tuân thủ best practices để bảo vệ dữ liệu của bạn.
