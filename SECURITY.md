@@ -87,6 +87,8 @@ const key = crypto.createHash('sha256').update(machineId).digest();
 - **Quyền truy cập**: Chỉ user hiện tại
 - **Encryption**: Secret keys được mã hóa trước khi lưu
 
+> **Bảo mật**: NeDB là database document-based, không có nguy cơ SQL injection. Tuy nhiên, cần validate dữ liệu đầu vào để tránh các vấn đề NoSQL injection khi sử dụng các query phức tạp.
+
 #### Schema
 
 ```javascript

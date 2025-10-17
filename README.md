@@ -118,6 +118,8 @@ TOTP-Authenticator/
 - **crypto**: Module mã hóa của Node.js
 - **electron-builder**: Đóng gói ứng dụng
 
+> **Lưu ý**: NeDB là một database nhúng đơn giản và nhẹ, phù hợp cho ứng dụng desktop nhỏ. Tuy nhiên, dự án NeDB không còn được bảo trì tích cực kể từ 2016. Đối với các dự án mới hoặc yêu cầu bảo mật cao hơn, nên cân nhắc các lựa chọn thay thế như [nedb-promises](https://github.com/bajankristof/nedb-promises) (wrapper có bảo trì) hoặc các giải pháp khác.
+
 ## 🔒 Bảo Mật
 
 - Secret keys được mã hóa bằng AES-256-CBC trước khi lưu vào database
