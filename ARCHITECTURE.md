@@ -22,7 +22,7 @@ TOTP-Authenticator/
 │   ├── renderer.js               # Frontend logic
 │   │
 │   ├── utils/                    # Utilities
-│   │   ├── database.js           # SQLite operations
+│   │   ├── database.js           # NeDB operations
 │   │   └── crypto.js             # Encryption/Decryption
 │   │
 │   └── assets/                   # Tài nguyên
@@ -78,7 +78,7 @@ TOTP-Authenticator/
     └────┬────┘
          ▼
     ┌─────────┐
-    │accounts │  ← SQLite Database
+    │accounts │  ← NeDB Database
     │  .db    │
     └─────────┘
 ```
@@ -159,19 +159,19 @@ window.api = {
 ### 4. Database Module (utils/database.js)
 
 **Chức năng:**
-- SQLite database operations
+- NeDB database operations (document-based)
 - CRUD operations cho accounts
 
 **Schema:**
-```sql
-accounts (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  service_name  TEXT NOT NULL,
-  username      TEXT NOT NULL,
-  secret_key    TEXT NOT NULL,      -- Encrypted
-  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP
-)
+```javascript
+{
+  _id: "unique_id",              // Tự động tạo bởi NeDB
+  service_name: "Google",        // Tên dịch vụ
+  username: "user@gmail.com",    // Tên người dùng
+  secret_key: "encrypted_key",   // Secret key đã mã hóa
+  createdAt: Date,               // Tự động tạo
+  updatedAt: Date                // Tự động cập nhật
+}
 ```
 
 **Methods:**
@@ -259,7 +259,7 @@ Format: IV:encrypted_data (hex)
 │    - Machine-specific key            │
 ├──────────────────────────────────────┤
 │ 4. Database Security                 │
-│    - Prepared statements             │
+│    - No SQL injection (document DB)  │
 │    - User-only file access           │
 ├──────────────────────────────────────┤
 │ 5. XSS Prevention                    │
@@ -289,7 +289,7 @@ crypto.encrypt(secret_key)
      ↓
 db.addAccount(encrypted_data)
      ↓
-SQLite INSERT
+NeDB INSERT
      ↓
 Return success
      ↓
@@ -327,7 +327,7 @@ Refresh every second
 - **Node.js** 20.x - Runtime environment
 
 ### Database
-- **better-sqlite3** ^9.0.0 - SQLite database
+- **NeDB** ^1.8.0 - Embedded JavaScript database
 
 ### Security
 - **crypto** (built-in) - Encryption/Decryption
@@ -361,9 +361,9 @@ dist/
 ## Performance Considerations
 
 ### Database
-- ✓ Synchronous operations (better-sqlite3)
-- ✓ In-memory operations are fast
-- ✓ Prepared statements for repeated queries
+- ✓ Asynchronous operations with promises
+- ✓ In-memory operations with autoload
+- ✓ Document-based storage (no SQL overhead)
 
 ### TOTP Generation
 - ✓ Cached in memory
@@ -429,11 +429,11 @@ test.js
 
 ### Documentation
 - [Electron Documentation](https://www.electronjs.org/docs)
-- [SQLite Documentation](https://www.sqlite.org/docs.html)
+- [NeDB Documentation](https://github.com/louischatriot/nedb)
 - [TOTP RFC 6238](https://tools.ietf.org/html/rfc6238)
 
 ### Dependencies
-- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
+- [NeDB](https://github.com/louischatriot/nedb)
 - [otplib](https://github.com/yeojz/otplib)
 - [electron-builder](https://www.electron.build/)
 
